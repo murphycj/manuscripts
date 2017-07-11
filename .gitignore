@@ -1,0 +1,30 @@
+*.*
+!*/
+!.gitignore
+!README.md
+!*.nf
+!*.sh
+!*.R
+!*.py
+!*.m
+
+# HuiEtAl2017
+
+!samples.xlsx
+!*excluded_genes.txt
+HuiEtAl2017/WEX/CNV/parameterize/*
+HuiEtAl2017/WEX/CNV/validation/*
+HuiEtAl2017/WEX/CNV/GISTIC/
+HuiEtAl2017/WEX/CNV/computeVarianceCorrection/*
+
+# BakhoumEtAl2017
+
+*BakhoumEtAl2017
+
+# GoncalvesEtAl2017
+
+*GoncalvesEtAl2017
+
+# TengEtAl2017
+
+!samples.csv

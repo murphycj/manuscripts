@@ -9,22 +9,22 @@ Han, T., Schatoff, E. M., Murphy, C., Zafra, M. P., Wilkinson, J. E., Elemento, 
 Sample information used.
 
 
-###RNAseq
+### RNAseq
 
 Contains the Nextflow script used for the RNA-seq pipeline.
 
-###RNAseq/COAD
+### RNAseq/COAD
 
 Derivation of the COAD gene signature and production of Fig S9C
 
-###RNAseq/DESeq2
+### RNAseq/DESeq2
 
 Differential expression analyses and scripts to produce figures 3E and S9A.
 
-###RNAseq/GSEA
+### RNAseq/GSEA
 
 Scripts for performing pre-ranked gene-set enrichment analysis.
 
-###RNAseq/HTSeqCount
+### RNAseq/HTSeqCount
 
 Post processing steps after running HTSeq

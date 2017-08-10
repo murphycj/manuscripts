@@ -1,0 +1,1 @@
+singularity exec /athena/elementolab/scratch/chm2059/from_dat02/chm2059/lib/singularity_images/murphycj-Singularity_gossamer-master.img /usr/local/bin/xenome index -T 45 -P GRCm38.GRCh38 -H ~/chm2059/data/refdata/GRCm38/Mus_musculus.GRCm38.dna.primary_assembly.fa -G ~/chm2059/data/refdata/GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa -v

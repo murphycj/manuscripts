@@ -17,3 +17,23 @@ Analysis scripts for the paired-end RNA-seq from cell lines.
 ### RNAseq/RNAseq_Samuel4427_2017_02_08
 
 Analysis scripts for the single-end RNA-seq from cell lines and xenografts.
+
+### RNAseq/RNAseq_Samuel4427_2017_02_08/Cluster
+
+Analysis scripts for unsupervised analyses.
+
+### RNAseq/RNAseq_Samuel4427_2017_02_08/Cufflinks
+
+Analysis scripts for post-processing of cufflinks output.
+
+### RNAseq/RNAseq_Samuel4427_2017_02_08/DESeq2
+
+Analysis scripts for using DESeq2.
+
+### RNAseq/RNAseq_Samuel4427_2017_02_08/HTSeqCount
+
+Analysis scripts for using HTSeqCount
+
+### RNAseq/RNAseq_Samuel4427_2017_02_08/pathway
+
+Analysis scripts for using pathway.

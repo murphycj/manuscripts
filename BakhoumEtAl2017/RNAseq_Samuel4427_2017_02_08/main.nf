@@ -14,18 +14,14 @@ params.gtf = '/home/chm2059/chm2059/data/refdata/GRCh38/Homo_sapiens.GRCh38.88.c
 params.starRef = '/home/chm2059/chm2059/data/refdata/GRCh38/star100'
 params.starOverhang = 100
 params.outFilterMismatchNmax = 5
-params.star_threads = 4
+params.star_threads = 12
 
 fqfiles = Channel.create()
 fqfiles2 = Channel.create()
 fqfiles3 = Channel.create()
 fqfiles4 = Channel.create()
 
-fastqs1 = Channel
-  .fromFilePairs("/home/chm2059/chm2059/0816_sam/data/Samuel4427_2017_03_03/*_L00*_R1_001.fastq.gz", size: 1)
-  .map{[it[0].split('_')[0],it[1][0]]}
-
-fastqs2 = Channel
+fastqs = Channel
   .fromFilePairs("/athena/elementolab/scratch/chm2059/from_dat02/chm2059/0816_sam/data/xenome/*/*graft.fastq.gz", size: 1)
   .map{[it[0].split('_')[0],it[1][0]]}
 
@@ -33,7 +29,7 @@ Channel
   .fromFilePairs("/home/chm2059/chm2059/0816_sam/data/Samuel4427_2017_02_08/*_L00*_R1_001.fastq.gz", size: 1)
   .map{[it[0].split('_')[0],it[1][0]]}
   .filter{(it[0] in['11','12','13','14','15','16','17','18'])}
-  .concat(fastqs1, fastqs2)
+  .concat(fastqs)
   .separate(fqfiles, fqfiles2, fqfiles3, fqfiles4){it->[it,it,it,it]}
 
 process fastqc {
@@ -76,7 +72,7 @@ process combine_fastqc_results {
 process star {
   scratch true
   executor 'sge'
-  clusterOptions '-l h_vmem=10G -pe smp 6 -l h_rt=96:00:00 -l athena=true'
+  clusterOptions '-l h_vmem=4G -pe smp 12 -l h_rt=96:00:00 -l athena=true'
 
   storeDir "${baseDir}/STAR/${prefix}"
 
@@ -177,7 +173,7 @@ process combine_flagstat {
 process cufflinks_star {
   scratch true
   executor 'sge'
-  clusterOptions '-l h_vmem=3G -pe smp 6 -l h_rt=96:00:00 -l athena=true'
+  clusterOptions '-l h_vmem=2G -pe smp 12 -l h_rt=96:00:00 -l athena=true'
 
   storeDir "${baseDir}/CufflinksSTAR/${prefix}"
 
@@ -191,7 +187,7 @@ process cufflinks_star {
 
   """
   ${params.cufflinks} \
-    -q -p 6 \
+    -q -p 12 \
     -o . \
     -b ${params.reference} \
     -G ${params.gtf} \

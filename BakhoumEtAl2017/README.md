@@ -30,6 +30,10 @@ Analysis scripts for post-processing of cufflinks output.
 
 Analysis scripts for using DESeq2.
 
+### RNAseq/RNAseq_Samuel4427_2017_02_08/DESeq2_ensembl
+
+Same analysis scripts for using DESeq2, except using Ensembl gene IDs instead of gene symbols.
+
 ### RNAseq/RNAseq_Samuel4427_2017_02_08/HTSeqCount
 
 Analysis scripts for using HTSeqCount
@@ -37,3 +41,7 @@ Analysis scripts for using HTSeqCount
 ### RNAseq/RNAseq_Samuel4427_2017_02_08/pathway
 
 Analysis scripts for using pathway.
+
+### RNAseq/RNAseq_Samuel4427_2017_02_08/PGE
+
+Positional gene enrichment analysis for detecting potential chromosomal changes from bulk RNA-seq.

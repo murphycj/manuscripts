@@ -130,99 +130,80 @@ plot_recurrent_cnas <- function(cns,prefix) {
   dev.off()
 }
 
-expression_vs_cnv_plots <- function(cnvs,cnv_cn,fpkm,samples) {
-  wex_mouse = as.character(samples[(samples$sequencing_type=="WEX"),"mouse"])
-  samples_controls <- samples[(samples$control==1) & (samples$mouse %in% wex_mouse) & (samples$sequencing_type=="RNAseq"),]
+plot_cna_fpkm <- function(gene,fpkm,cnvs,cnv_cn,amp) {
 
-  rnaseq_common <- c()
-  wex_common <- c()
+  samples.rnaseq <- c()
+  samples.wex <- c()
+  samples.brca1 <- c()
+  samples.fpkm <- c()
 
-  for (i in row.names(samples_controls)) {
-    tmp <- samples_controls[i,]
-    tmp <- samples[(samples$mouse==tmp$mouse) & (samples$sequencing_type=="WEX") & (samples$tissue!="tail") & (samples$tissue!="liver"),]
+  cc <- unique(samples[,c("mouse","primary_tumor_index")])
+  for (i in 1:nrow(cc)) {
+    tmp <- samples[(samples$mouse==cc[i,1]) & (samples$primary_tumor_index==cc[i,2]),]
+    tmp.wex <- row.names(tmp[tmp$sequencing_type=="WEX",])
 
-    if (nrow(tmp)>0) {
-      rnaseq_common <- c(rnaseq_common, rep(i,nrow(tmp)))
-      wex_common <- c(wex_common, row.names(tmp))
+    if (length(tmp.wex)>1) {
+      print("more than one WES sample")
+    }
+
+    if (("RNAseq" %in% tmp$sequencing_type) & ("WEX" %in% tmp$sequencing_type)) {
+      tmp.rnaseq <- row.names(tmp[tmp$sequencing_type=="RNAseq",])
+
+      if (length(tmp.rnaseq)>1) {
+        if ("primary" %in% as.character(tmp[tmp$sequencing_type=="RNAseq","tissue"])) {
+
+          tmp.rnaseq <- row.names(tmp[(tmp$sequencing_type=="RNAseq") & (tmp$tissue=="primary"),])
+
+          if (length(tmp.rnaseq)>1) {
+            samples.fpkm <- c(samples.fpkm,mean(fpkm[gene,tmp.rnaseq]))
+          } else {
+            samples.fpkm <- c(samples.fpkm,fpkm[gene,tmp.rnaseq])
+          }
+        } else {
+          tmp.rnaseq <- row.names(tmp[(tmp$sequencing_type=="RNAseq") & (tmp$tissue=="implant"),])
+          if (length(tmp.rnaseq)>1) {
+            samples.fpkm <- c(samples.fpkm,mean(fpkm[gene,tmp.rnaseq]))
+          } else {
+            samples.fpkm <- c(samples.fpkm,fpkm[gene,tmp.rnaseq])
+          }
+        }
+      } else {
+        samples.fpkm <- c(samples.fpkm,fpkm[gene,tmp.rnaseq])
+      }
+
+      samples.rnaseq <- c(samples.rnaseq,paste(tmp.rnaseq,collapse=";"))
+      samples.wex <- c(samples.wex,tmp.wex)
+      samples.brca1 <- c(samples.brca1,as.character(tmp[tmp.wex,"brca1"]))
     }
   }
 
-  colors <- rep("black",length(rnaseq_common))
-  colors[wex_common %in% names(cnv_cn["Met",cnv_cn["Met",]>3])]<-"red"
-  pdf("Met-fpkm-cnv.pdf")
-  par(mar=c(5,5,2,2),family="Times")
-  plot(
-    as.numeric(cnvs["Met",wex_common]),
-    as.numeric(fpkm["Met",rnaseq_common]),
-    pch=16,
-    cex=2,
-    cex.lab=1.5,
-    xlab="log2 copy number",
-    ylab="FPKM",
-    col=colors,
-    cex.axis=1.5
+  if (length(samples.rnaseq)!=length(samples.wex)) {
+    print("BOO")
+  }
+
+  data <- data.frame(
+    WEX_sample=samples.wex,
+    RNAseq_sample=samples.rnaseq,
+    BRCA1=samples.brca1,
+    FPKM=samples.fpkm,
+    log2=as.numeric(as.matrix(cnvs[gene,samples.wex])),
+    CN=as.numeric(as.matrix(cnv_cn[gene,samples.wex]))
   )
-  dev.off()
 
-  colors <- rep("black",length(rnaseq_common))
-  colors[wex_common %in% names(cnv_cn["Yap1",cnv_cn["Yap1",]>3])]<-"red"
-  pdf("Yap1-fpkm-cnv.pdf")
+  write.csv(data, paste(gene,"-fpkm-cnv.csv",sep=""), row.names=F)
+
+  colors <- rep("black",length(samples.wex))
+  if (amp) {
+    colors[samples.wex %in% colnames(cnv_cn)[as.numeric(as.matrix(cnv_cn[gene,]))>3]]<-"red"
+  } else {
+    colors[samples.wex %in% colnames(cnv_cn)[as.numeric(as.matrix(cnv_cn[gene,]))==0]]<-"red"
+  }
+
+  pdf(paste(gene,"-fpkm-cnv.pdf",sep=""))
   par(mar=c(5,5,2,2),family="Times")
   plot(
-    as.numeric(cnvs["Yap1",wex_common]),
-    as.numeric(fpkm["Yap1",rnaseq_common]),
-    pch=16,
-    cex=2,
-    cex.lab=1.5,
-    xlab="log2 copy number",
-    ylab="FPKM",
-    col=colors,
-    cex.axis=1.5
-  )
-  dev.off()
-
-
-  colors <- rep("black",length(rnaseq_common))
-  colors[wex_common=="HL-WES-09"]<-"red"
-  pdf("Pten-1660-fpkm-cnv.pdf")
-  par(mar=c(5,5,2,2),family="Times")
-  plot(
-    as.numeric(cnvs["Pten",wex_common]),
-    as.numeric(fpkm["Pten",rnaseq_common]),
-    pch=16,
-    cex=2,
-    cex.lab=1.5,
-    xlab="log2 copy number",
-    ylab="FPKM",
-    col=colors,
-    cex.axis=1.5
-  )
-  dev.off()
-
-  colors <- rep("black",length(rnaseq_common))
-  colors[wex_common=="HL-WES-04"]<-"red"
-  pdf("Fgfr2-1460-fpkm-cnv.pdf")
-  par(mar=c(5,5,2,2),family="Times")
-  plot(
-    as.numeric(cnvs["Fgfr2",wex_common]),
-    as.numeric(fpkm["Fgfr2",rnaseq_common]),
-    pch=16,
-    cex=2,
-    cex.lab=1.5,
-    xlab="log2 copy number",
-    ylab="FPKM",
-    col=colors,
-    cex.axis=1.5
-  )
-  dev.off()
-
-  colors <- rep("black",length(rnaseq_common))
-  colors[wex_common=="HL-WES-08"]<-"red"
-  pdf("Egfr-1616-fpkm-cnv.pdf")
-  par(mar=c(5,5,2,2),family="Times")
-  plot(
-    as.numeric(cnvs["Egfr",wex_common]),
-    as.numeric(fpkm["Egfr",rnaseq_common]),
+    as.numeric(as.matrix(cnvs[gene,samples.wex])),
+    samples.fpkm,
     pch=16,
     cex=2,
     cex.lab=1.5,
@@ -234,8 +215,10 @@ expression_vs_cnv_plots <- function(cnvs,cnv_cn,fpkm,samples) {
   dev.off()
 }
 
+
 cnvs <- read.csv("../gene-sample-log2.csv",row.names=1,header=T,check.names=F)
 cnv_cn <- read.csv("../gene-sample-cn.csv",header=T,row.names=1,check.names=F)
+cnv_cn <- cnv_cn[-c(1),]
 
 fpkm <- read.csv(
   "/Users/charlesmurphy/Desktop/Research/0914_hui/results/RNAseq/Cufflinks/genes-symbols-fpkm.csv",
@@ -244,24 +227,34 @@ fpkm <- read.csv(
 )
 
 samples <- read.xlsx("/Users/charlesmurphy/Desktop/Research/0914_hui/data/samples.xlsx","samples",row.names=1)
+samples <- samples[(samples['byl']==0) & (samples['bkm']==0) & (samples['bmn']==0) & (samples$tissue %in% c("primary","implant")),]
 
-expression_vs_cnv_plots(cnvs,cnv_cn,fpkm,samples)
+common <- intersect(colnames(fpkm),row.names(samples))
+fpkm <- fpkm[,common]
+fpkm <- t(scale(t(fpkm)))
 
-cns <- load_cnvkit_data_cns(filterY=T)
+plot_cna_fpkm("Met",fpkm,cnvs,cnv_cn,T)
+plot_cna_fpkm("Yap1",fpkm,cnvs,cnv_cn,T)
+plot_cna_fpkm("Pten",fpkm,cnvs,cnv_cn,F)
+plot_cna_fpkm("Fgfr2",fpkm,cnvs,cnv_cn,T)
+plot_cna_fpkm("Egfr",fpkm,cnvs,cnv_cn,T)
+plot_cna_fpkm("Myc",fpkm,cnvs,cnv_cn,T)
 
-plot_recurrent_cnas(cns,"all")
+#cns <- load_cnvkit_data_cns(filterY=T)
 
-samples <- read.xlsx("/Users/charlesmurphy/Desktop/Research/0914_hui/data/samples.xlsx","samples",row.names=1)
-samples <- samples[(samples$sequencing_type=="WEX") & (samples$tissue=="primary"),]
+#plot_recurrent_cnas(cns,"all")
 
-cns.brca1 <- list()
-for (sample in row.names(samples[samples$brca1=="flox/flox",])) {
-  cns.brca1[[sample]] <- cns[[sample]]
-}
-plot_recurrent_cnas(cns.brca1,"brcaDEL")
+#samples <- read.xlsx("/Users/charlesmurphy/Desktop/Research/0914_hui/data/samples.xlsx","samples",row.names=1)
+#samples <- samples[(samples$sequencing_type=="WEX") & (samples$tissue=="primary"),]
 
-cns.brca1 <- list()
-for (sample in row.names(samples[samples$brca1=="WT",])) {
-  cns.brca1[[sample]] <- cns[[sample]]
-}
-plot_recurrent_cnas(cns.brca1,"brcaWT")
+#cns.brca1 <- list()
+#for (sample in row.names(samples[samples$brca1=="flox/flox",])) {
+#  cns.brca1[[sample]] <- cns[[sample]]
+#}
+#plot_recurrent_cnas(cns.brca1,"brcaDEL")
+
+#cns.brca1 <- list()
+#for (sample in row.names(samples[samples$brca1=="WT",])) {
+#  cns.brca1[[sample]] <- cns[[sample]]
+#}
+#plot_recurrent_cnas(cns.brca1,"brcaWT")

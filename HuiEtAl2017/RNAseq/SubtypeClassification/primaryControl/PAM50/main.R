@@ -4,6 +4,7 @@ library("RColorBrewer")
 library("gplots")
 library("caret")
 library("xlsx")
+library(leaflet)
 
 prep_data <- function(data,pam50.genes) {
 
@@ -210,7 +211,7 @@ dev.off()
 
 #classify mouse
 
-fpkm <- read.csv("/Users/charlesmurphy/Desktop/Research/0914_hui/results/RNAseq/Cufflinks/rename_filtered/genes-humanSymbols-fpkm.csv",row.names=1,header=T,check.names=F)
+fpkm <- read.csv("/Users/charlesmurphy/Desktop/Research/0914_hui/results/RNAseq/Cufflinks/genes-humanSymbols-fpkm.csv",row.names=1,header=T,check.names=F)
 temp <- row.names(fpkm)
 temp[temp=="NUF2"]<-"CDCA1"
 temp[temp=="NDC80"]<-"KNTC2"
@@ -224,28 +225,44 @@ class_predictions <- r[[1]]
 all_class_prob <- r[[2]]
 row.names(all_class_prob) <- classes
 
-samples <- read.xlsx("/Users/charlesmurphy/Desktop/Research/0914_hui/data/samples.xlsx","samples",row.names=1)
+samples <- read.xlsx("/Users/charlesmurphy/Desktop/Research/0914_hui/data/samples.xlsx","samples")
+samples <- samples[(samples['byl']==0) & (samples['bkm']==0) & (samples['bmn']==0),]
 samples <- samples[samples$sequencing_type=="RNAseq",]
-common <- intersect(as.character(samples$sample_name),colnames(all_class_prob))
+row.names(samples) <- as.character(samples$sample_ID)
 
-
+common <- intersect(as.character(samples$sample_ID),colnames(all_class_prob))
+print(length(common))
 all_class_prob <- all_class_prob[,common]
 all_class_prob <- all_class_prob[,order(all_class_prob[1,],decreasing=T)]
+samples <- samples[colnames(all_class_prob),]
 
 write.csv(t(all_class_prob),"per-sample-probabilities.csv",quote=F)
 
-png('Mouse-classification2.png',width=1400,height=200)
-par(mar=c(5,7,2,2),cex=0.9)
-barplot(
+mouse.markers <- read.csv("/Users/charlesmurphy/Desktop/Research/0914_hui/results/RNAseq/SubtypeClassification/Markers/mouse-marker-status-prediction.csv",header=T,row.names=1,colClasses="character")
+mouse.markers <- mouse.markers[colnames(all_class_prob),]
+mouse.markers[mouse.markers=="Positive"]<-"black"
+mouse.markers[mouse.markers=="Negative"]<-"white"
+
+sample_type = as.character(samples$tissue)
+sample_type[sample_type=="primary"]<-"#999999"
+sample_type[sample_type=="implant"]<-"#999999"
+sample_type[sample_type=="normal breast"]<-"green"
+
+N <- ncol(all_class_prob)
+
+png('Mouse-classification-PAM50.png',width=1400,height=220)
+par(mar=c(6,7,2,3),cex=0.9)
+pp <- barplot(
   all_class_prob,
   las=2,
-  xlab="Samples",
-  xlim=c(0,ncol(all_class_prob)+50),
+  xlab="",
+  xlim=c(0,ncol(all_class_prob)+30),
   ylab="Probability of subtype\nassignment",
   names.arg=rep("",ncol(all_class_prob)),
   col=c("red","blue","#00ffff","purple","green"),
   cex.lab=1.5
 )
+par(xpd=T)
 legend(
   "topright",
   c("Basal-like","Luminal A","Luminal B","HER2-enriched","Normal-like"),
@@ -253,62 +270,60 @@ legend(
   pch=15,
   cex=1.4
 )
-dev.off()
+title(xlab="Samples", line=4.5, cex.lab=1.5)
 
-
-#colnames(all_class_prob) <- unlist(lapply(colnames(all_class_prob),function(x) return(gsub("parental ","P. ",x))))
-r <- data.frame(
-  sample=unlist(lapply(colnames(all_class_prob),function(x) return(rep(x,5)))),
-  probability=c(all_class_prob),
-  color=rep(c("red","blue","#00ffff","purple","green"),ncol(all_class_prob))
-  )
-
-r$sample = factor(r$sample,levels=unique(r$sample))
-
-png("Mouse-classification.png",width=1200,height=500)
-par(mar=c(5,5,3,2),family="Times")
-beeswarm(
-  probability~sample,
-  data=r,
-  las=2,
-  cex=1.4,
-  cex.axis=1.3,
-  xlim=c(1,nrow(samples)+30),
-  pch=16,
-  pwcol=as.character(color),
-  xlab="Samples",
-  ylab="Probability of subtype assignment",
-  main="",
-  labels=F
+#plot sample type
+rect(
+  pp-0.5,
+  rep(-0.04,N),
+  pp+0.5,
+  rep(-0.11,N),
+  col=sample_type
 )
-n=1
 
-#for (i in levels(r$sample)) {
-#  brca1 <- as.character(samples[samples$sample_name==i,"brca1"])
-
-#  i = gsub("parental ","P. ",i)
-#  i = gsub("\\*","",i)
-#  i = gsub("KO","",i)
-#  i = gsub("HET","",i)
-#  i = gsub("WhiteL","W",i)
-#  i = gsub("WT","",i)
-#  if (is.na(brca1)) {
-#    mtext(i,side=1,at=n,col="black",las=2,line=2,cex=1.3)
-#  } else if (brca1=="WT") {
-#    mtext(i,side=1,at=n,col="black",las=2,line=2,cex=1.3)
-#  } else {
-#    mtext(i,side=1,at=n,col="red",las=2,line=2,cex=1.3)
-#  }
-#  n=n+1
-#}
-
-mtext("Class probability", side=2, line=3, cex=2)
-mtext("PAM50 classification", side=3, line=1, cex=2)
-legend(
-  "topright",
-  legend=classes,
-  pch=16,
-  cex=1.8,
-  col=c("red","blue","#00ffff","purple","green"),
+#plot ER/PR/HER2 statuses
+rect(
+  pp-0.5,
+  rep(-0.19,N),
+  pp+0.5,
+  rep(-0.12,N),
+  col=mouse.markers$PR_status
 )
+rect(
+  pp-0.5,
+  rep(-0.27,N),
+  pp+0.5,
+  rep(-0.20,N),
+  col=mouse.markers$ER_status
+)
+rect(
+  pp-0.5,
+  rep(-0.35,N),
+  pp+0.5,
+  rep(-0.28,N),
+  col=mouse.markers$HER2_status
+)
+
+#x_box=127.5 # all
+x_box=75.5
+y_box=-0.48
+
+text(x_box-6,-0.5,"Sample type",cex=1.4)
+text(x_box+1.6,y_box+0.035,"Tumor",cex=1.4,adj=c(0,0.5))
+rect(x_box,y_box,x_box+1.2,y_box+0.07,col="#999999")
+text(x_box+1.6,y_box-0.12+0.035,"Normal",cex=1.4,adj=c(0,0.5))
+rect(x_box,y_box-0.12,x_box+1.2,y_box-0.12+0.07,col="green")
+
+x_box <- x_box + 25
+
+text(x_box-8,-0.5,"PR/ER/HER2 status",cex=1.4)
+text(x_box+1.6,y_box+0.035,"Negative",cex=1.4,adj=c(0,0.5))
+rect(x_box,y_box,x_box+1.2,y_box+0.07,col="white")
+text(x_box+1.6,y_box-0.12+0.035,"Positive",cex=1.4,adj=c(0,0.5))
+rect(x_box,y_box-0.12,x_box+1.2,y_box-0.12+0.07,col="black")
+
+text(max(pp)+0.7,-0.075,"Sample type",cex=1,adj=c(0,0.5))
+text(max(pp)+0.7,-0.155,"PR status",cex=1,adj=c(0,0.5))
+text(max(pp)+0.7,-0.235,"ER status",cex=1,adj=c(0,0.5))
+text(max(pp)+0.7,-0.315,"HER2 status",cex=1,adj=c(0,0.5))
 dev.off()

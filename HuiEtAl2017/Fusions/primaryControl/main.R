@@ -58,8 +58,8 @@ count_fusions <- function(fusions,samples) {
     sep="-")
   )
 
-  fusions.global <- matrix(nrow=length(fusion.ids),ncol=length(samples$sample_name))
-  samples <- as.character(samples$sample_name)
+  fusions.global <- matrix(nrow=length(fusion.ids),ncol=length(samples$sample_ID))
+  samples <- as.character(samples$sample_ID)
   row.names(fusions.global)<-fusion.ids
   colnames(fusions.global) <- samples
 
@@ -77,19 +77,17 @@ count_fusions <- function(fusions,samples) {
   	fusions.global[fusions.notsample,i]<-0
   }
   return(fusions.global)
-  #fusions.global<-fusions.global[order(rowSums(fusions.global),decreasing=T),]
-  #fusions.global <- filter_by_occurance(fusions.global,2,sample_data)
 }
 
 collapse_by_primary <- function(fusions,fusion.counts,samples) {
 
-  primaries <- unique(samples$mouse)
+  primaries <- as.character(unique(samples$mouse))
   fusions.collapsed <- matrix(nrow=nrow(fusion.counts),ncol=length(primaries))
   row.names(fusions.collapsed) <- row.names(fusion.counts)
   colnames(fusions.collapsed) <- primaries
 
   for (i in 1:length(primaries)) {
-    samples.temp <- as.character(samples[samples$mouse==primaries[i],]$sample_name)
+    samples.temp <- as.character(samples[samples$mouse==primaries[i],]$sample_ID)
     if (length(samples.temp)>1) {
       fusions.collapsed[,primaries[i]] <- rowSums(fusion.counts[,samples.temp])
     } else {
@@ -122,29 +120,16 @@ filter_by_occurance_in_primary <- function(fusions,fusions.primary,n) {
   return(fusions[fusions.to.keep,])
 }
 
-
-get_unique_treatments <- function(fusions,fusions.table,sample) {
-
-  fusions.table <- fusions.table[,-c(1,2,3)]
-  class(fusions.table) <- "numeric"
-  fusions.table.unique <- fusions.table[apply(fusions.table,1,sum)==1,]
-
-  samples.implants <- samples[samples["tissue"]=="implant",]
-  samples.implants <- samples.implants[samples.implants[,"sample_name"] %in% colnames(fusions.table.unique),]
-
-
-}
-
 samples <- read.xlsx("~/Desktop/Research/0914_hui/data/samples.xlsx","samples")
+samples <- samples[(samples['byl']==0) & (samples['bkm']==0) & (samples['bmn']==0),]
 row.names(samples) <- as.character(samples$sample_ID)
 
-fusions <- read.csv("fusions.csv",header=T)
-fusions$sample <- samples[as.character(fusions$sample),"sample_name"]
-write.csv(fusions,"fusions.rename.csv",row.names=F)
+fusions <- read.csv("../fusions.csv",header=T)
+fusions <- fusions[as.character(fusions$sample) %in% row.names(samples), ]
 
 #remove those in normal samples
 
-fusions.normal <- fusions[fusions$sample %in% c("Normal breast 1","Normal breast 2","Normal breast 3"),]
+fusions.normal <- fusions[fusions$sample %in% c("HL115-2374","HL116-2453","HL117-2598"),]
 fusions.normal <- unique(paste(fusions.normal$Gene_1_symbol.5end_fusion_partner.,fusions.normal$Gene_2_symbol.3end_fusion_partner.,sep="-"))
 fusions.all <- paste(fusions$Gene_1_symbol.5end_fusion_partner.,fusions$Gene_2_symbol.3end_fusion_partner.,sep="-")
 fusions <- fusions[!(fusions.all %in% fusions.normal),]
@@ -155,7 +140,7 @@ fusions <- fusions[!grepl("readthrough",as.character(fusions[,"Fusion_descriptio
 
 #remove fusions from repeat samples
 
-repeat_samples <- samples[samples$repeat.==1,]$sample_name
+repeat_samples <- samples[samples$repeat.==1,]$sample_ID
 fusions <- fusions[!(fusions$sample %in% repeat_samples),]
 
 write.csv(fusions,"fusions.noNormal.noReadthrough.csv",row.names=F)
@@ -171,9 +156,3 @@ write.csv(fusions.filtered,"fusions-noNormal.noReadthrough.n2.csv",row.names=F)
 
 fusions.table <- write_fusion_table(fusions=fusions.filtered,samples=samples)
 write.csv(fusions.table,"fusions-table-noNormal.noReadthrough.n2.csv",row.names=F)
-
-#fusions.filtered <- filter_by_occurance_in_primary(fusions=fusions,fusions.primary=fusions.primary,n=5)
-#write.csv(fusions.filtered,"fusions-noNormal.noReadthrough.n5.csv",row.names=F)
-
-#fusions.table <- write_fusion_table(fusions=fusions.filtered,samples=samples)
-#write.csv(fusions.table,"fusions-table-noNormal.noReadthrough.n5.csv",row.names=F)

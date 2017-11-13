@@ -4,6 +4,7 @@ import vcf
 import pandas
 
 samples = pandas.read_excel("/Users/charlesmurphy/Desktop/Research/0914_hui/data/samples.xlsx","samples")
+samples = samples[(samples['byl']==0) & (samples['bkm']==0) & (samples['bmn']==0)]
 
 brca1 = dict(
     zip(samples['sample_ID'],samples['brca1'])
@@ -14,7 +15,7 @@ mouse = dict(
 )
 
 
-vcf_in = vcf.Reader(open('../somatic.nodbsnp.varscan.filtered.vcf','r'))
+vcf_in = vcf.Reader(open('../../somatic.nodbsnp.varscan.filtered.primaryControl.vcf','r'))
 data = {i:[] for i in vcf_in.samples}
 
 fout = open('variant_table.csv','w')

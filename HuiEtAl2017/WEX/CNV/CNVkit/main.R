@@ -1,4 +1,16 @@
 source("lib.R")
+library("xlsx")
+
+mutual_exclusivity <- function() {
+  cna_data <- read.csv("gene-sample-cn.csv",header=T,row.names=1,check.names=F)
+  cna_data <- cna_data[,((cna_data["Met",]>3) | (cna_data["Yap1",]>3))]
+  tmp <- matrix(c(
+    length(colnames(cna_data[,(cna_data["Met",]<=3) & (cna_data["Yap1",]<=3)])),
+    length(colnames(cna_data[,(cna_data["Met",]<=3) & (cna_data["Yap1",]>3)])),
+    length(colnames(cna_data[,(cna_data["Met",]>3) & (cna_data["Yap1",]<=3)])),
+    length(colnames(cna_data[,(cna_data["Met",]>3) & (cna_data["Yap1",]>3)]))
+    ),nrow=2)
+}
 
 summarize_by_gene <- function() {
   cns <- load_cnvkit_data_cns(filterY=T)
@@ -55,13 +67,24 @@ summarize_by_gene <- function() {
       previous_genes <- gg
     }
   }
+  samples <- read.xlsx("/Users/charlesmurphy/Desktop/Research/0914_hui/data/samples.xlsx","samples",row.names=1)
 
   data <- data[order(row.names(data)),]
   data <- data[,order(colnames(data))]
+  data <- rbind(as.character(samples[colnames(data),"sample_name"]),data)
+  data <- data[row.names(data)!="-",]
+  tmp <- row.names(data)
+  tmp[tmp==""]<-"sample_names"
+  row.names(data) <- tmp
   write.csv(data,"gene-sample-log2.csv",quote=F)
 
   data_binned <- data_binned[order(row.names(data_binned)),]
   data_binned <- data_binned[,order(colnames(data_binned))]
+  data_binned <- rbind(as.character(samples[colnames(data_binned),"sample_name"]),data_binned)
+  data_binned <- data_binned[row.names(data_binned)!="-",]
+  tmp <- row.names(data_binned)
+  tmp[tmp==""]<-"sample_names"
+  row.names(data_binned) <- tmp
   write.csv(data_binned,"gene-sample-cn.csv",quote=F)
 }
 

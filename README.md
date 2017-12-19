@@ -5,7 +5,7 @@ Manuscript submitted.
 Manuscript submitted.
 
 ### HuiEtAl2017
-Manuscript submitted.
+OnlineFirst at: http://cancerdiscovery.aacrjournals.org/content/early/2017/12/02/2159-8290.CD-17-0679
 
 ### TengEtAl2017
 

@@ -8,7 +8,7 @@ Goncalves MD, Hwang S-K, Pauli C, Murphy CJ, Cheng Z, Hopkins BD, et al. Fenofib
 
 ### GoncalvesEtAl2018
 
-1. Goncalves MD, Lu C, Tutnauer J, Hartman TE, Hwang S-K, Murphy CJ, et al. High-fructose corn syrup enhances intestinal tumor growth in mice. Science. 2019;363:1345–9. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30898933)
+Goncalves MD, Lu C, Tutnauer J, Hartman TE, Hwang S-K, Murphy CJ, et al. High-fructose corn syrup enhances intestinal tumor growth in mice. Science. 2019;363:1345–9. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/30898933)
 
 ### HuiEtAl2017
 Liu H, Murphy CJ, Karreth FA, Emdal KB, Yang K, White FM, et al. Identifying and Targeting Sporadic Oncogenic Genetic Aberrations in Mouse Models of Triple-Negative Breast Cancer. Cancer Discovery. 2017;8:354–69. [PubMed](https://www.ncbi.nlm.nih.gov/pubmed/29203461)
